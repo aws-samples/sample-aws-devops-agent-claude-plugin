@@ -1,0 +1,2 @@
+AWS DevOps Agent Claude Plugin
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.

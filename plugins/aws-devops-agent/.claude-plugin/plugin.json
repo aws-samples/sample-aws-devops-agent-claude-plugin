@@ -1,13 +1,13 @@
 {
   "name": "aws-devops-agent",
-  "description": "Investigate incidents, optimize costs, review architecture, and map topology with the AWS DevOps Agent — fully integrated into Claude Code via MCP, with skills that auto-route incidents to the right workflow.",
+  "description": "Investigate incidents, optimize costs, review architecture, and map topology with the AWS DevOps Agent \u2014 fully integrated into Claude Code via MCP, with skills that auto-route incidents to the right workflow.",
   "version": "0.1.0",
   "author": {
     "name": "AWS DevOps Agent contributors"
   },
   "homepage": "https://docs.aws.amazon.com/devopsagent/latest/userguide/",
   "repository": "https://github.com/aws-samples/aws-devops-agent-claude-plugin",
-  "license": "Apache-2.0",
+  "license": "MIT-0",
   "keywords": [
     "aws",
     "devops",
