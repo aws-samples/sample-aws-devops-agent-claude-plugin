@@ -37,7 +37,7 @@ The plugin's `.mcp.json` reads these at startup. AWS credentials must be valid f
 From the [aws-devops-tools marketplace](../../README.md):
 
 ```
-/plugin marketplace add awslabs/aws-devops-agent-claude-plugin
+/plugin marketplace add aws-samples/aws-devops-agent-claude-plugin
 /plugin install aws-devops-agent@aws-devops-tools
 /reload-plugins
 ```

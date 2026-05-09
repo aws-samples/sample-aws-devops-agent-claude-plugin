@@ -26,12 +26,10 @@ pip install 'aws-devops-agent[mcp]'
 Then in Claude Code:
 
 ```
-/plugin marketplace add awslabs/aws-devops-agent-claude-plugin
+/plugin marketplace add aws-samples/aws-devops-agent-claude-plugin
 /plugin install aws-devops-agent@aws-devops-tools
 /reload-plugins
 ```
-
-(Replace `awslabs/aws-devops-agent-claude-plugin` with wherever this marketplace lives once published.)
 
 ## Try it
 
