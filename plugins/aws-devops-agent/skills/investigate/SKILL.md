@@ -77,7 +77,7 @@ Example update:
 2. `list_recommendations(task_id=TASK_ID)` for actionable fixes.
 3. `get_recommendation(recommendation_id=...)` for each — read the full spec.
 4. If the recommendation is an IaC change (CDK / CFN / Terraform), generate the fix locally **but do not apply it**. Show the diff, explain it, and let the user approve.
-5. If `list_recommendations` returns nothing, kick off a follow-up: `create_investigation(title="Generate mitigations for task <taskId>", priority="LOW")`.
+5. If `list_recommendations` returns nothing **and this is the original investigation**, kick off a single follow-up: `create_investigation(title="Generate mitigations for task <taskId>", priority="LOW")`. If the follow-up also returns no recommendations, stop and tell the user no automated remediation is available.
 
 ## Security
 

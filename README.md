@@ -101,7 +101,7 @@ PRs welcome. Skills should keep their `description` frontmatter sharp — that's
 
 ## License
 
-Apache-2.0.
+MIT-0. See [LICENSE.txt](LICENSE.txt).
 
 ## Inspiration
 

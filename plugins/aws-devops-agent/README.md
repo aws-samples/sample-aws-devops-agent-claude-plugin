@@ -63,4 +63,4 @@ The skills in this plugin all enforce this rule. Don't override it.
 
 ## License
 
-Apache-2.0.
+MIT-0.
