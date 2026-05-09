@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "aws-devops-agent": {
+      "command": "aws-devops-agent",
+      "args": ["mcp"],
+      "env": {
+        "DEVOPS_AGENT_USER_ID": "${DEVOPS_AGENT_USER_ID}",
+        "DEVOPS_AGENT_REGION": "${DEVOPS_AGENT_REGION:-us-east-1}",
+        "DEVOPS_AGENT_AUTO_CREATE_SPACE": "${DEVOPS_AGENT_AUTO_CREATE_SPACE:-true}",
+        "AWS_PROFILE": "${AWS_PROFILE}"
+      }
+    }
+  }
+}

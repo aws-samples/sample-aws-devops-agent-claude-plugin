@@ -1,0 +1,26 @@
+{
+  "name": "aws-devops-tools",
+  "description": "Plugins that integrate the AWS DevOps Agent with Claude Code — investigations, cost analysis, multi-AgentSpace routing.",
+  "owner": {
+    "name": "AWS DevOps Agent contributors"
+  },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "aws-devops-agent",
+      "source": "./aws-devops-agent",
+      "description": "AWS DevOps Agent for Claude Code: incident investigation, cost optimization, architecture review, topology mapping, and multi-AgentSpace routing.",
+      "category": "operations",
+      "tags": [
+        "aws",
+        "devops",
+        "incident",
+        "cost",
+        "architecture",
+        "multi-account"
+      ]
+    }
+  ]
+}
