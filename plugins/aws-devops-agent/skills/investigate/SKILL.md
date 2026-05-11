@@ -46,7 +46,7 @@ Why are we seeing 503 errors on the checkout-service ECS service starting at 14:
 )
 ```
 
-Save the `taskId` and `executionId`.
+Save the `taskId`. The `executionId` will become available from `get_task` once the investigation is `IN_PROGRESS`.
 
 ## Stream progress — never silently poll
 
