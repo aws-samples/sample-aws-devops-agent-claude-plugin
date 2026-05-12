@@ -108,7 +108,3 @@ PRs welcome. Skills should keep their `description` frontmatter sharp — that's
 ## License
 
 MIT-0. See [LICENSE](LICENSE).
-
-## Inspiration
-
-The structure and intent-routing approach is adapted from the [Kiro Powers](https://github.com/kirodotdev/powers/tree/main/aws-devops-agent) project, decomposed into Claude Code's plugin / skill / command primitives.
