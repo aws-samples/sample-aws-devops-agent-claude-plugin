@@ -101,7 +101,7 @@ PRs welcome. Skills should keep their `description` frontmatter sharp — that's
 
 ## License
 
-MIT-0. See [LICENSE.txt](LICENSE.txt).
+MIT-0. See [LICENSE](LICENSE).
 
 ## Inspiration
 
