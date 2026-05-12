@@ -25,7 +25,7 @@ Don't serialize — the investigation takes 5–8 minutes; the staging chat take
 
 **Prod (deep investigation):**
 ```
-aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id as-prod-001 --task-type INVESTIGATION --title 'ECS 503 errors on checkout-service (prod)' --priority HIGH --description '<local context + runbook>' --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id as-prod-001 --task-type INVESTIGATION --title 'ECS 503 errors on checkout-service (prod)' --priority HIGH --description '<local context>' --region us-east-1")
 ```
 → Save `taskId`. Poll with `get-backlog-task` every 30-45s.
 
