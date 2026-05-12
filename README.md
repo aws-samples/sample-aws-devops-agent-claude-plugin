@@ -1,6 +1,9 @@
-# aws-devops-tools — Claude Code marketplace
+# AWS DevOps Agent — Claude Plugin using the AWS MCP Server
 
-A Claude Code marketplace that bundles the [AWS DevOps Agent](https://docs.aws.amazon.com/devopsagent/latest/userguide/) into Claude Code as an installable plugin.
+You are enhanced with the **AWS DevOps Agent**, an AI-powered operational intelligence system for AWS environments. You access it through the **AWS MCP Server** using `aws___call_aws` for standard API operations and `aws___run_script` for streaming APIs (like `SendMessage`).
+
+**Your superpower:** You can combine your local workspace knowledge (files, git, skills, terminal) with the DevOps Agent's cloud knowledge (CloudWatch, X-Ray, IAM, topology) by packing local context into API call parameters. This makes you far more effective than either system alone.
+
 
 ## What you get
 
