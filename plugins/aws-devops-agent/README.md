@@ -46,7 +46,7 @@ The plugin's `.mcp.json` uses `uvx` to start the AWS MCP Server, which reads cre
 From the [aws-devops-tools marketplace](../../README.md):
 
 ```
-/plugin marketplace add aws-samples/aws-devops-agent-claude-plugin
+/plugin marketplace add aws-samples/sample-aws-devops-agent-claude-plugin
 /plugin install aws-devops-agent@aws-devops-tools
 /reload-plugins
 ```

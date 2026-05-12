@@ -33,7 +33,7 @@ uvx mcp-proxy-for-aws@latest --help
 Then in Claude Code:
 
 ```
-/plugin marketplace add aws-samples/aws-devops-agent-claude-plugin
+/plugin marketplace add aws-samples/sample-aws-devops-agent-claude-plugin
 /plugin install aws-devops-agent@aws-devops-tools
 /reload-plugins
 ```

@@ -6,7 +6,7 @@
     "name": "AWS DevOps Agent contributors"
   },
   "homepage": "https://docs.aws.amazon.com/devopsagent/latest/userguide/",
-  "repository": "https://github.com/aws-samples/aws-devops-agent-claude-plugin",
+  "repository": "https://github.com/aws-samples/sample-aws-devops-agent-claude-plugin",
   "license": "MIT-0",
   "keywords": [
     "aws",
