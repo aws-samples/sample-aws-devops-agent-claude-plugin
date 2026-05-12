@@ -6,7 +6,7 @@ A Claude Code marketplace that bundles the [AWS DevOps Agent](https://docs.aws.a
 
 The `aws-devops-agent` plugin gives Claude Code:
 
-- **An MCP server** with 19 tools for the AWS DevOps Agent (investigations, chat, recommendations, AgentSpaces, journal records).
+- **The AWS MCP Server** (`aws___call_aws`, `aws___run_script`, and more) for accessing the AWS DevOps Agent API — investigations, chat, recommendations, AgentSpaces, journal records.
 - **Four skills** that auto-route the user's intent:
   - `investigate` — incident root cause (deep, 5–8 min, streamed progress)
   - `chat` — cost / architecture / topology / knowledge (instant)
@@ -17,10 +17,14 @@ The `aws-devops-agent` plugin gives Claude Code:
 
 ## Install
 
-Prerequisite: the AWS DevOps Agent CLI must be on `PATH`.
+Prerequisite: `uv` must be on `PATH` (the AWS MCP Server is fetched via `uvx`).
 
 ```bash
-pip install 'aws-devops-agent[mcp]'
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Verify the MCP proxy works (fetches on first run)
+uvx mcp-proxy-for-aws@latest --help
 ```
 
 Then in Claude Code:
@@ -35,14 +39,13 @@ Then in Claude Code:
 
 ```bash
 # In your shell, before launching Claude Code:
-export DEVOPS_AGENT_USER_ID=$(whoami)
-export DEVOPS_AGENT_REGION=us-east-1
 export AWS_PROFILE=<your-aws-profile>
+aws sso login   # or: aws configure
 ```
 
 Then in Claude Code:
 
-- `list_agent_spaces` — should return your spaces.
+- `aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1")` — should return your spaces.
 - "Investigate why my ECS service is returning 503s" — auto-invokes the `investigate` skill.
 - "What runbooks does the agent have?" — auto-invokes `chat`.
 - `/aws-devops-agent:spaces` — list your AgentSpaces explicitly.
@@ -60,7 +63,7 @@ If you have more than one AgentSpace (e.g. prod, staging, knowledge), say "set u
 ├── plugins/
 │   └── aws-devops-agent/                # the plugin
 │       ├── .claude-plugin/plugin.json
-│       ├── .mcp.json                    # MCP server wired to DEVOPS_AGENT_* env
+│       ├── .mcp.json                    # AWS MCP Server config (uvx mcp-proxy-for-aws)
 │       ├── skills/                      # auto-invoked workflows
 │       │   ├── investigate/
 │       │   ├── chat/

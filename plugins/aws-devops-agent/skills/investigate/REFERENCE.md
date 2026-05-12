@@ -18,22 +18,22 @@
 |--------|--------|
 | `CREATED` | Poll every 30s. Wait up to 60s — if still CREATED, keep waiting. |
 | `IN_PROGRESS` | Poll every 30–45s. Fetch journal records with pagination. |
-| `COMPLETED` | Stop polling. Fetch full journal `order=DESC limit=10`, then recommendations. |
+| `COMPLETED` | Stop polling. Fetch full journal `--order DESC --max-results 10`, then recommendations. |
 | `FAILED` | Stop polling. Fetch journal — partial findings often exist. |
 
 Never poll faster than 30s — you'll hit throttling.
 
 ## Pagination
 
-`list_journal_records` returns `nextToken` when there are more records. Save it and pass on the next poll so you only fetch *new* records each cycle. Re-fetching the full journal on every poll is wasteful and slow.
+`aws devops-agent list-journal-records` returns `nextToken` when there are more records. Save it and pass `--next-token TOKEN` on the next poll so you only fetch *new* records each cycle. Re-fetching the full journal on every poll is wasteful and slow.
 
 ## Error recovery
 
 | Error | Cause | Action |
 |-------|-------|--------|
-| `ResourceNotFoundException` | Wrong agent_space_id | `list_agent_spaces` to verify |
+| `ResourceNotFoundException` | Wrong agent_space_id | `aws devops-agent list-agent-spaces --region us-east-1` to verify |
 | `ThrottlingException` | Polling too fast | Back off — 60s, then 90s, then 120s |
-| `ValidationException` | Missing required field on `create_investigation` | `title` and `priority` are required |
+| `ValidationException` | Missing required field on `create-backlog-task` | `--title`, `--task-type`, and `--priority` are required |
 | `AccessDeniedException` | Missing IAM permissions | User needs `AIDevOpsAgentFullAccess` |
 | `ExpiredTokenException` | AWS credentials expired | `aws sso login` or refresh access keys |
 
@@ -54,11 +54,14 @@ Never poll faster than 30s — you'll hit throttling.
 When the user reports an incident, fire **both** in sequence so they get instant guidance while the deep investigation runs:
 
 ```
-create_chat() → executionId
-send_message(executionId, "<incident> + <local context>") → instant triage (2-10s)
+# Instant triage (2-10s)
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1") → executionId
+aws___run_script → send_message(executionId, "<incident> + <local context>")
 
-create_investigation(title="<incident>", priority="HIGH") → taskId
-poll get_task → list_journal_records → deep root cause (5-8 min)
+# Deep investigation (5-8 min)
+aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id SPACE_ID --task-type INVESTIGATION --title '<incident>' --priority HIGH --description '<local context>' --region us-east-1") → taskId
+aws___call_aws(cli_command="aws devops-agent get-backlog-task ...") → poll for executionId
+aws___call_aws(cli_command="aws devops-agent list-journal-records ...") → stream findings
 ```
 
 Show the chat response immediately. Update the user with investigation progress as journal records come in.
@@ -68,9 +71,11 @@ Show the chat response immediately. Update the user with investigation progress 
 If a previous investigation completed without recommendations:
 
 ```
-create_investigation(
-    title="Generate mitigations for task <prior-task-id>",
-    priority="LOW",
-    description="The prior investigation identified <root cause>. Generate IaC remediation."
-)
+aws___call_aws(cli_command="aws devops-agent create-backlog-task \
+  --agent-space-id SPACE_ID \
+  --task-type INVESTIGATION \
+  --title 'Generate mitigations for task <prior-task-id>' \
+  --priority LOW \
+  --description 'The prior investigation identified <root cause>. Generate IaC remediation.' \
+  --region us-east-1")
 ```

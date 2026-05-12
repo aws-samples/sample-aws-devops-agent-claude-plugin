@@ -1,14 +1,14 @@
 {
   "mcpServers": {
-    "aws-devops-agent": {
-      "command": "aws-devops-agent",
-      "args": ["mcp"],
-      "env": {
-        "DEVOPS_AGENT_USER_ID": "${DEVOPS_AGENT_USER_ID}",
-        "DEVOPS_AGENT_REGION": "${DEVOPS_AGENT_REGION:-us-east-1}",
-        "DEVOPS_AGENT_AUTO_CREATE_SPACE": "${DEVOPS_AGENT_AUTO_CREATE_SPACE:-true}",
-        "AWS_PROFILE": "${AWS_PROFILE}"
-      }
+    "aws-mcp": {
+      "command": "uvx",
+      "timeout": 100000,
+      "transport": "stdio",
+      "args": [
+        "mcp-proxy-for-aws@latest",
+        "https://aws-mcp.us-east-1.api.aws/mcp",
+        "--metadata", "AWS_REGION=us-east-1"
+      ]
     }
   }
 }

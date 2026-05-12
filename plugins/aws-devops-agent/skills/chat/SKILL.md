@@ -10,37 +10,63 @@ description: >-
 
 # Chat with the AWS DevOps Agent
 
-Chat is the **default**. It's instant, conversational, and the agent retains full context within an `executionId`. Only escalate to `create_investigation` when the user describes an incident or the agent itself suggests deeper analysis is warranted.
+Chat is the **default**. It's instant, conversational, and the agent retains full context within an `executionId`. Only escalate to `create-backlog-task` when the user describes an incident or the agent itself suggests deeper analysis is warranted.
 
 ## Workflow
 
 1. **Pick the AgentSpace.**
    ```
-   list_agent_spaces → save agent_space_id
+   aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1") → save agent_space_id
    ```
    For multi-space setups, see the `multi-space` skill.
 
 2. **Open a chat session.**
    ```
-   create_chat(agent_space_id=SPACE_ID) → executionId
+   aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1") → executionId
    ```
    Save `executionId` and reuse it for the entire conversation. The agent retains full context server-side.
 
-3. **Inject local context, then ask.**
-   ```
-   send_message(execution_id=EXECUTION_ID, content="""
-   [Local Context]
+3. **Inject local context, then ask** using `aws___run_script` with the streaming pattern:
+   ```python
+   aws___run_script(code="""
+   import boto3
+   client = boto3.client('devops-agent', region_name='us-east-1')
+
+   response = client.send_message(
+       agentSpaceId='SPACE_ID',
+       executionId='EXEC_ID',
+       content='''[Local Context]
    <relevant IaC, dependency manifest, error log, git state>
 
    [Question]
-   <what the user actually asked>
+   <what the user actually asked>'''
+   )
+
+   # Collect streamed response — skip 'final_response' duplicate blocks
+   full_response = []
+   current_block_type = None
+   for event in response['events']:
+       if 'contentBlockStart' in event:
+           current_block_type = event['contentBlockStart'].get('type')
+       elif 'contentBlockDelta' in event:
+           if current_block_type in (None, 'text'):  # Skip 'final_response' duplicates
+               delta = event['contentBlockDelta'].get('delta', {})
+               if 'textDelta' in delta:
+                   full_response.append(delta['textDelta']['text'])
+       elif 'contentBlockStop' in event:
+           current_block_type = None
+       elif 'responseFailed' in event:
+           print(f"Error: {event['responseFailed']['errorMessage']}")
+   print(''.join(full_response))
    """)
    ```
    The response comes back as collected text. Show it to the user.
 
+   > **Why `aws___run_script`?** `SendMessage` returns an EventStream that `aws___call_aws` cannot handle. The boto3 code above iterates the stream and deduplicates content (skipping `final_response` blocks).
+
 4. **Follow up.** Reuse the same `executionId` — the agent keeps context. Don't open a new chat per question.
 
-5. **Resume previous chats.** `list_chats` finds older sessions. Reuse the `executionId` to continue.
+5. **Resume previous chats.** `aws___call_aws(cli_command="aws devops-agent list-chats --agent-space-id SPACE_ID --region us-east-1")` finds older sessions. Reuse the `executionId` to continue.
 
 ## What to inject into `content`
 
@@ -75,16 +101,13 @@ If the user phrases something as "investigate" but it's really a question, you c
 When chat surfaces a finding that needs deep multi-service correlation, hand off:
 
 ```
-create_investigation(
-    title="Root cause of <thing chat found>",
-    priority="HIGH",
-    description="""
-[From chat]
-<summary of chat findings>
-[Local context]
-<git log, IaC, etc.>
-"""
-)
+aws___call_aws(cli_command="aws devops-agent create-backlog-task \
+  --agent-space-id SPACE_ID \
+  --task-type INVESTIGATION \
+  --title 'Root cause of <thing chat found>' \
+  --priority HIGH \
+  --description '[From chat] <summary of chat findings> [Local context] <git log, IaC, etc.>' \
+  --region us-east-1")
 ```
 
 Switch to the `investigate` skill for the polling/streaming workflow.

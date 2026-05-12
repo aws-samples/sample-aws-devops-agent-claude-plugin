@@ -1,126 +1,77 @@
-# Worked example — querying multiple AgentSpaces from one Claude Code session
+# Multi-Space Walkthrough: Production Incident with Staging Comparison
 
-This walkthrough shows the multi-AgentSpace pattern end-to-end: a production incident where the right answer requires data from a **prod** space, a comparison against **staging**, and a runbook from a shared **knowledge** space.
+This example shows how to use multiple AgentSpaces during a real incident — investigating production, comparing staging, and pulling runbooks from a knowledge space.
 
-## The setup
+## Scenario
 
-The user has three AgentSpaces in three accounts:
+Your checkout-service is throwing 503 errors in production. You have three AgentSpaces:
+- **prod** (as-prod-001) — production account
+- **stage** (as-stage-002) — staging account
+- **kb** (as-kb-003) — knowledge base with runbooks
 
-| Space | AWS Profile | Agent Space ID | Purpose |
-|-------|-------------|----------------|---------|
-| **prod**  | `devops-prod`  | `as-prod-001`  | Customer-facing services |
-| **stage** | `devops-stage` | `as-stage-002` | Pre-prod validation |
-| **kb**    | `devops-kb`    | `as-kb-003`    | Shared runbooks |
+## Steps
 
-The plugin's MCP server is wired against `AWS_PROFILE=devops-prod`, so prod space tools work in-session. The other two are reachable via shell wrappers (`devops-stage`, `devops-kb`) installed during setup.
+### Step 1 — Discover and pick the right spaces
 
-The routing guide lives at `.claude/aws-devops-agent.md` and the model loaded it at session start.
-
-## The user's question
-
-> Our checkout-service is throwing 503s in prod. Was this happening in staging? And do we have a runbook for ECS 503s?
-
-This is a **three-space question**:
-1. Investigate the prod issue (deep, MCP)
-2. Check staging for the same pattern (chat, shell wrapper)
-3. Pull the standard runbook (chat, shell wrapper)
-
-## What Claude does
-
-### Step 1 — Hand the user instant triage from the knowledge space
-
-Runbooks come back in seconds and inform everything else, so fetch first.
-
-```bash
-devops-kb "What's our standard runbook for ECS 503 errors? Give me the diagnostic checklist."
+```
+aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1")
 ```
 
-Show the runbook to the user. Capture it for the investigation `description`.
+This returns all spaces. Pick the one matching the incident scope (production).
 
 ### Step 2 — Open the prod investigation in parallel with the staging check
 
 Don't serialize — the investigation takes 5–8 minutes; the staging chat takes seconds. Fire both, then keep both progressing.
 
-**Prod (MCP, deep):**
+**Prod (deep investigation):**
 ```
-create_investigation(
-    agent_space_id="as-prod-001",
-    title="ECS 503 errors on checkout-service (prod)",
-    priority="HIGH",
-    description="""
-[Runbook from kb space]
-<runbook text>
+aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id as-prod-001 --task-type INVESTIGATION --title 'ECS 503 errors on checkout-service (prod)' --priority HIGH --description '<local context + runbook>' --region us-east-1")
+```
+→ Save `taskId`. Poll with `get-backlog-task` every 30-45s.
 
-[Local context]
-Service: checkout-service
-Last deploy: commit abc1234 (2h ago)
-Recent commits: abc1234 fix: increase timeout · def5678 feat: add /api/v2
-CDK Stack: lib/checkout-stack.ts — ECS Fargate behind ALB
-Error: ConnectionError: upstream connect error
+**Staging (fast chat):**
+```
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-stage-002 --region us-east-1")
+→ executionId
 
-[Question]
-Why are we seeing 503 errors on checkout-service starting 14:32 UTC?
-"""
-)
-→ taskId = "task-1234"
+aws___run_script → send_message(exec_stage, "Is the checkout-service healthy in staging? Any 503s or error spikes in the last hour?")
 ```
 
-Tell the user: investigation started, ETA 5–8 min, you'll keep them posted.
+### Step 3 — Pull runbooks from the knowledge space
 
-**Staging (shell wrapper, fast):**
-```bash
-devops-stage "Has checkout-service shown elevated 503 rates in the last 24h? Compare to its baseline."
-```
-
-Show the staging answer right away — usually 2–10s.
-
-### Step 3 — Synthesize the staging vs prod delta
-
-If staging is **clean**: tell the user "staging is fine — this is prod-specific, likely tied to the recent deploy or prod-only config."
-
-If staging is **also affected**: the issue isn't environment-specific; this is a code or config bug that shipped to both. Tell the user; the investigation should focus on what changed.
-
-If staging hasn't been deployed yet with the new code: explicitly call that out — the deltas are an experiment, not a comparison.
-
-### Step 4 — Stream the prod investigation
-
-While the user reads the staging summary, keep polling `get_task(taskId)` and surfacing journal records:
-
-> 🔍 **2 min in:** Agent is querying CloudWatch metrics for `checkout-service`. Found a 23% error rate spike at 14:32 UTC.
-
-> 🔬 **4 min in:** Cross-referencing X-Ray traces — downstream calls to `payment-service` are timing out. Latency p99 jumped from 200ms to 8s.
-
-> 🎯 **6 min in:** Root cause: the ALB security group blocking `checkout-service` → `payment-service` was tightened in commit `def5678`. Connection pool exhaustion follows.
-
-### Step 5 — Recommendations + remediation
+While the investigation runs, check the knowledge base for existing runbooks:
 
 ```
-list_recommendations(task_id="task-1234")
-→ recommendation_id "rec-789"
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-kb-003 --region us-east-1")
+→ exec_kb
 
-get_recommendation(recommendation_id="rec-789")
-→ Spec for restoring the security group rule (CDK change)
+aws___run_script → send_message(exec_kb, "What's our standard runbook for ECS 503 errors?")
 ```
 
-Generate the CDK diff locally. **Show it; don't apply it.** Ask the user to review and apply themselves.
+### Step 4 — Stream investigation progress
 
-### Step 6 — Followup — verify in staging before prod rollback
+```
+aws___call_aws(cli_command="aws devops-agent get-backlog-task --agent-space-id as-prod-001 --task-id TASK_ID --region us-east-1")
+→ When status=IN_PROGRESS and executionId available:
 
-Suggest the user replay the runbook's verification steps in staging once the fix lands there, before rolling forward in prod. The runbook (from kb) has the steps; quote them inline.
+aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id as-prod-001 --execution-id EXEC_ID --region us-east-1")
+```
 
-## What this demonstrates
+Update the user after each poll:
+> 🔍 **2 min in:** Agent querying CloudWatch for error rate across AZs...
+> 🎯 **5 min in:** Root cause — memory limit reduced from 512MB to 256MB in last deploy.
 
-| Pattern | Where it showed up |
-|---------|-------------------|
-| Knowledge space → primary investigation | Step 1 → 2 (runbook injected into `description`) |
-| Parallel chat + investigation | Step 2 (staging chat alongside prod investigation) |
-| Staging vs prod synthesis | Step 3 (delta, not raw output) |
-| Streaming progress to the user | Step 4 (no silent polling) |
-| Recommendation as a proposal, not an action | Step 5 (show, don't apply) |
+### Step 5 — Synthesize and present
 
-## Anti-patterns avoided
+Once the investigation completes:
 
-- ❌ Fanning out an investigation to all three spaces by default (waste of time)
-- ❌ Pasting the staging response and the prod response side-by-side without synthesis
-- ❌ Auto-running the CDK change from the recommendation
-- ❌ Going silent for 6 minutes while the investigation runs
+```
+aws___call_aws(cli_command="aws devops-agent list-recommendations --agent-space-id as-prod-001 --task-id TASK_ID --region us-east-1")
+```
+
+Combine findings:
+- **Prod investigation**: Root cause + recommendations
+- **Staging comparison**: "Staging is healthy — confirms this is a prod-only deploy issue"
+- **KB runbook**: Standard ECS 503 runbook for reference
+
+Present a unified summary with the remediation plan. **Never auto-execute** — show the diff and let the user approve.

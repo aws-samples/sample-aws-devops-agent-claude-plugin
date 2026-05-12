@@ -11,7 +11,7 @@ This skill is the routing brain. Use it when the user has multiple spaces config
 ## Discovering spaces
 
 ```
-list_agent_spaces → array of {agent_space_id, name, ...}
+aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1") → array of {agentSpaceId, name, ...}
 ```
 
 If only one space is returned, this skill doesn't apply — use `chat` or `investigate` directly.
@@ -38,8 +38,8 @@ If the user has a routing guide stored locally (e.g. `.claude/aws-devops-agent.m
 ```
 
 If no guide exists, run discovery:
-1. `list_agent_spaces` → get all spaces.
-2. For each space: `create_chat(agent_space_id=...)` → `send_message("Summarize the AWS accounts, services, and runbooks you have access to.")`
+1. `aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1")` → get all spaces.
+2. For each space: `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1")` → `aws___run_script → send_message(executionId, "Summarize the AWS accounts, services, and runbooks you have access to.")`
 3. Offer to write the routing guide to `.claude/aws-devops-agent.md` so future sessions skip discovery.
 
 ## Pattern A — Parallel queries, one synthesized answer
@@ -47,13 +47,13 @@ If no guide exists, run discovery:
 Use when the user wants a comparison: "compare prod and staging error rates", "is this issue happening in both accounts?", "audit costs across all our environments".
 
 ```
-# 1. Open a chat per space (one round-trip per space, run in parallel where possible)
-create_chat(agent_space_id=PROD_ID)  → exec_prod
-create_chat(agent_space_id=STAGE_ID) → exec_stage
+# 1. Open a chat per space (run in parallel where possible)
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id PROD_ID --region us-east-1")  → exec_prod
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id STAGE_ID --region us-east-1") → exec_stage
 
 # 2. Send the same question to each, with environment-specific context
-send_message(exec_prod,  "<question> | env=prod | <prod IaC context>")
-send_message(exec_stage, "<question> | env=stage | <stage IaC context>")
+aws___run_script → send_message(exec_prod,  "<question> | env=prod | <prod IaC context>")
+aws___run_script → send_message(exec_stage, "<question> | env=stage | <stage IaC context>")
 
 # 3. Synthesize locally — present a side-by-side summary, not two separate dumps
 ```
@@ -66,37 +66,39 @@ Use when one space holds runbooks/knowledge that informs work in another space.
 
 ```
 # 1. Ask the knowledge space first
-create_chat(agent_space_id=KB_ID) → exec_kb
-send_message(exec_kb, "What's our standard runbook for ECS 503 errors?")
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id KB_ID --region us-east-1") → exec_kb
+aws___run_script → send_message(exec_kb, "What's our standard runbook for ECS 503 errors?")
 
 # 2. Apply that runbook in the target environment
-create_investigation(
-    agent_space_id=PROD_ID,
-    title="ECS 503 errors on checkout-service",
-    description="[Runbook from knowledge space]\n<runbook text>\n\n[Local context]\n..."
-)
+aws___call_aws(cli_command="aws devops-agent create-backlog-task \
+  --agent-space-id PROD_ID \
+  --task-type INVESTIGATION \
+  --title 'ECS 503 errors on checkout-service' \
+  --priority HIGH \
+  --description '[Runbook from knowledge space] <runbook text> [Local context] ...' \
+  --region us-east-1")
 ```
 
-The DevOps Agent doesn't share state between spaces — you bridge it by quoting the knowledge space's response into the investigation's `description`.
+The DevOps Agent doesn't share state between spaces — you bridge it by quoting the knowledge space's response into the investigation's `--description`.
 
 ## Pattern C — Targeted single-space query
 
 Use when the user explicitly names a space or environment.
 
 ```
-# Pick the matching agent_space_id from your routing memory
-# Then chat / investigate as normal
+# Pick the matching agentSpaceId from your routing memory
+# Then use aws___call_aws / aws___run_script as normal
 ```
 
 If the routing is ambiguous and the user doesn't say, **ask once** — better than firing into the wrong account.
 
 ## Pattern D — Investigations don't share state
 
-`create_investigation` is per-space. If an issue spans accounts, you may need *two* investigations:
+`create-backlog-task` is per-space. If an issue spans accounts, you may need *two* investigations:
 
 ```
-create_investigation(agent_space_id=PROD_ID,  title="Latency spike — prod side",  ...)
-create_investigation(agent_space_id=STAGE_ID, title="Latency spike — stage side", ...)
+aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id PROD_ID --task-type INVESTIGATION --title 'Latency spike — prod side' --priority HIGH --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id STAGE_ID --task-type INVESTIGATION --title 'Latency spike — stage side' --priority HIGH --region us-east-1")
 ```
 
 Track both `taskId`s. Poll both. Surface findings together.
