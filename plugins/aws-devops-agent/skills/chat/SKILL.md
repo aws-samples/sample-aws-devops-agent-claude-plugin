@@ -22,7 +22,7 @@ Chat is the **default**. It's instant, conversational, and the agent retains ful
 
 2. **Open a chat session.**
    ```
-   aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1") → executionId
+   aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1") → executionId
    ```
    Save `executionId` and reuse it for the entire conversation. The agent retains full context server-side.
 

@@ -55,7 +55,7 @@ When the user reports an incident, fire **both** in sequence so they get instant
 
 ```
 # Instant triage (2-10s)
-aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1") → executionId
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1") → executionId
 aws___run_script → send_message(executionId, "<incident> + <local context>")
 
 # Deep investigation (5-8 min)

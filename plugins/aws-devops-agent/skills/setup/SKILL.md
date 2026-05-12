@@ -123,7 +123,7 @@ REGION="us-east-1"
 [ $# -eq 0 ] && { echo "Usage: $(basename "$0") \"your question\""; exit 1; }
 
 # Create a chat session and send the message
-EXEC_ID=$(AWS_PROFILE=devops-stage aws devops-agent create-chat \
+EXEC_ID=$(AWS_PROFILE=devops-stage aws devops-agent create-chat --user-id $USER_ID --user-type IAM \
   --agent-space-id "$SPACE_ID" --region "$REGION" \
   --query 'executionId' --output text)
 
@@ -185,7 +185,7 @@ When you see `ExpiredTokenException`:
 
 In Claude Code:
 1. `aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1")` returns the primary space's spaces.
-2. `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --region us-east-1")` returns an `executionId`.
+2. `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1")` returns an `executionId`.
 3. `aws___run_script` with a `send_message` call returns a response within ~10s.
 4. A shell wrapper (`devops-stage "list runbooks"`) prints results.
 5. The routing guide is loaded at the start of the next session — confirm by asking the user a routing question.

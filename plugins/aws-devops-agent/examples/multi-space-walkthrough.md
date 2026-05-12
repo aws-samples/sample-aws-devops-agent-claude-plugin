@@ -31,7 +31,7 @@ aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-i
 
 **Staging (fast chat):**
 ```
-aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-stage-002 --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-stage-002 --user-id USER_ID --user-type IAM --region us-east-1")
 → executionId
 
 aws___run_script → send_message(exec_stage, "Is the checkout-service healthy in staging? Any 503s or error spikes in the last hour?")
@@ -42,7 +42,7 @@ aws___run_script → send_message(exec_stage, "Is the checkout-service healthy i
 While the investigation runs, check the knowledge base for existing runbooks:
 
 ```
-aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-kb-003 --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id as-kb-003 --user-id USER_ID --user-type IAM --region us-east-1")
 → exec_kb
 
 aws___run_script → send_message(exec_kb, "What's our standard runbook for ECS 503 errors?")
