@@ -26,7 +26,7 @@ code=$(echo "$input" | jq -r '.tool_input.code // ""')
 
 # Only auto-approve if the script contains send_message and nothing dangerous
 if echo "$code" | grep -q 'client\.send_message(' && \
-   ! echo "$code" | grep -qP '(delete|remove|terminate|put_|create_|update_)'; then
+   ! echo "$code" | grep -qP 'client\.(delete|remove|terminate|put_|create_|update_)'; then
   echo '{"decision": "allow"}'
 else
   echo '{}'
