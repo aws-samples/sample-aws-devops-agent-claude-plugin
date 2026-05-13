@@ -131,7 +131,7 @@ AWS_PROFILE=devops-stage python3 - "$EXEC_ID" "$SPACE_ID" "$REGION" "$*" <<'EOF'
 import sys, boto3
 exec_id, space_id, region, content = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 client = boto3.client('devops-agent', region_name=region)
-response = client.send_message(agentSpaceId=space_id, executionId=exec_id, content=content)
+response = client.send_message(agentSpaceId=space_id, executionId=exec_id, userId='claude', content=content)
 full = []
 current = None
 for event in response['events']:
@@ -197,4 +197,7 @@ In Claude Code:
 - **`MCP error -32000: Connection closed`** → Most commonly missing/expired AWS credentials. Run `aws sts get-caller-identity` to verify, then `aws sso login` to refresh. Also check that `uvx` is in your PATH.
 - **0 tools after install** → run `/reload-plugins`, then `/tools` to confirm `aws___call_aws` appears.
 - **Plugin doesn't see env vars** → Claude Code reads the env vars from the shell that *launched* it; restart from a fresh shell after editing rc files.
-- **`User identity could not be resolved`** on `create-chat` → `CreateChat` requires Operator App identity (IDC or IAM). Use `aws sso login` for SSO identity. Alternatively, use `SendMessage` on investigation `executionId`s from `create-backlog-task` which works with any credential type.
+- **`User identity could not be resolved`** / **`Missing required parameter: userId`** on `create-chat` or `send_message` → both APIs require explicit identity arguments:
+  - `create-chat` requires `--user-id <name> --user-type IAM|IDC|IDP`
+  - `send_message` requires `userId=<name>`
+  For Isengard or direct IAM credentials use `--user-type IAM` and pass any string matching `[a-zA-Z0-9_.-]+` as `--user-id` (e.g. your Unix username). For SSO/Identity Center use `--user-type IDC` after `aws sso login`. Alternatively, use `SendMessage` on investigation `executionId`s from `create-backlog-task` which works with any credential type.

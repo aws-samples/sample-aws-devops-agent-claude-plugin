@@ -35,6 +35,7 @@ Chat is the **default**. It's instant, conversational, and the agent retains ful
    response = client.send_message(
        agentSpaceId='SPACE_ID',
        executionId='EXEC_ID',
+       userId='USER_ID',
        content='''[Local Context]
    <relevant IaC, dependency manifest, error log, git state>
 

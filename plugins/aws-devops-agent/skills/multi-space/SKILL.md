@@ -39,7 +39,7 @@ If the user has a routing guide stored locally (e.g. `.claude/aws-devops-agent.m
 
 If no guide exists, run discovery:
 1. `aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1")` → get all spaces.
-2. For each space: `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1")` → `aws___run_script → send_message(executionId, "Summarize the AWS accounts, services, and runbooks you have access to.")`
+2. For each space: `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1")` → `aws___run_script → send_message(executionId=..., userId=USER_ID, content="Summarize the AWS accounts, services, and runbooks you have access to.")`
 3. Offer to write the routing guide to `.claude/aws-devops-agent.md` so future sessions skip discovery.
 
 ## Pattern A — Parallel queries, one synthesized answer
@@ -52,8 +52,8 @@ aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id PROD_I
 aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id STAGE_ID --user-id USER_ID --user-type IAM --region us-east-1") → exec_stage
 
 # 2. Send the same question to each, with environment-specific context
-aws___run_script → send_message(exec_prod,  "<question> | env=prod | <prod IaC context>")
-aws___run_script → send_message(exec_stage, "<question> | env=stage | <stage IaC context>")
+aws___run_script → send_message(agentSpaceId=PROD_ID, executionId=exec_prod, userId=USER_ID, content="<question> | env=prod | <prod IaC context>")
+aws___run_script → send_message(agentSpaceId=STAGE_ID, executionId=exec_stage, userId=USER_ID, content="<question> | env=stage | <stage IaC context>")
 
 # 3. Synthesize locally — present a side-by-side summary, not two separate dumps
 ```
@@ -67,7 +67,7 @@ Use when one space holds runbooks/knowledge that informs work in another space.
 ```
 # 1. Ask the knowledge space first
 aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id KB_ID --user-id USER_ID --user-type IAM --region us-east-1") → exec_kb
-aws___run_script → send_message(exec_kb, "What's our standard runbook for ECS 503 errors?")
+aws___run_script → send_message(agentSpaceId=KB_ID, executionId=exec_kb, userId=USER_ID, content="What's our standard runbook for ECS 503 errors?")
 
 # 2. Apply that runbook in the target environment
 aws___call_aws(cli_command="aws devops-agent create-backlog-task \
