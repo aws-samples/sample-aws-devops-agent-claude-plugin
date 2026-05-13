@@ -94,11 +94,11 @@ cp examples/hooks/aws-allow-chat.sh  .claude/hooks/
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__aws__aws___call_aws",
+        "matcher": "mcp__aws-mcp__aws___call_aws",
         "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-reads.sh"}]
       },
       {
-        "matcher": "mcp__aws__aws___run_script",
+        "matcher": "mcp__aws-mcp__aws___run_script",
         "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-chat.sh"}]
       }
     ]
