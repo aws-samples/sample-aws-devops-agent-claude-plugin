@@ -77,6 +77,38 @@ If you have more than one AgentSpace (e.g. prod, staging, knowledge), say "set u
 └── README.md                            # this file
 ```
 
+## Reducing approval fatigue (PreToolUse hooks)
+
+During incident response the plugin can generate 6+ permission prompts per task. To auto-approve **read-only** AWS calls and **chat streaming** while still gating mutations, use the PreToolUse hooks in `examples/hooks/`:
+
+1. Copy the hook scripts into your project:
+```bash
+mkdir -p .claude/hooks
+cp examples/hooks/aws-allow-reads.sh .claude/hooks/
+cp examples/hooks/aws-allow-chat.sh  .claude/hooks/
+```
+
+2. Add to `.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__aws__aws___call_aws",
+        "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-reads.sh"}]
+      },
+      {
+        "matcher": "mcp__aws__aws___run_script",
+        "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-chat.sh"}]
+      }
+    ]
+  }
+}
+```
+
+**What gets auto-approved:** `list-*`, `describe-*`, `get-*` CLI commands, and `send_message` streaming calls.
+**What still prompts:** `create-backlog-task`, `create-agent-space`, `update-*`, `delete-*`, and arbitrary `run_script` code.
+
 ## Local development
 
 Test the plugin without publishing:

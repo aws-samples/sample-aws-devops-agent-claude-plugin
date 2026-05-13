@@ -108,8 +108,14 @@ This is rare — usually one space owns the problem. Don't fan out by default.
 ## What NOT to do
 
 - **Don't blast every space with every question.** It's slow, expensive, and the user has to read 3× as much output.
+- **Don't fan out without verifying scope.** If a space's `description` or recorded coverage doesn't mention the relevant service, skip it — sending a question into a scope-mismatched space typically hangs rather than returning "I don't know."
 - **Don't fire investigations in parallel by default.** They take 5–8 minutes each. Pick the one space that owns the incident.
 - **Don't silently switch spaces mid-conversation.** If a follow-up needs a different space, tell the user: "Switching to the knowledge space to look up the runbook."
+
+
+## Timeout guidance
+
+When calling `send_message` via `aws___run_script`, wrap the EventStream iteration in a 90-second timeout. If a space doesn't respond within 90s, it's likely a scope mismatch — surface a message like "Space X did not respond within 90s — skipping (likely scope mismatch)" and move on rather than hanging.
 
 ## See also
 

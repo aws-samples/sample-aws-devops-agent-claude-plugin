@@ -120,18 +120,20 @@ For each space that is NOT the MCP primary, generate a wrapper script so the use
 set -euo pipefail
 SPACE_ID="as-def456"   # staging agent space ID
 REGION="us-east-1"
+USER_ID="${USER_ID:-${USER:-claude}}"
 [ $# -eq 0 ] && { echo "Usage: $(basename "$0") \"your question\""; exit 1; }
 
 # Create a chat session and send the message
-EXEC_ID=$(AWS_PROFILE=devops-stage aws devops-agent create-chat --user-id $USER_ID --user-type IAM \
+EXEC_ID=$(AWS_PROFILE=devops-stage aws devops-agent create-chat --user-id "$USER_ID" --user-type IAM \
   --agent-space-id "$SPACE_ID" --region "$REGION" \
   --query 'executionId' --output text)
 
-AWS_PROFILE=devops-stage python3 - "$EXEC_ID" "$SPACE_ID" "$REGION" "$*" <<'EOF'
-import sys, boto3
+AWS_PROFILE=devops-stage USER_ID="$USER_ID" python3 - "$EXEC_ID" "$SPACE_ID" "$REGION" "$*" <<'EOF'
+import os, sys, boto3
 exec_id, space_id, region, content = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+user_id = os.environ.get('USER_ID', 'claude')
 client = boto3.client('devops-agent', region_name=region)
-response = client.send_message(agentSpaceId=space_id, executionId=exec_id, userId='claude', content=content)
+response = client.send_message(agentSpaceId=space_id, executionId=exec_id, userId=user_id, content=content)
 full = []
 current = None
 for event in response['events']:
