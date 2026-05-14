@@ -71,14 +71,20 @@ Example update:
 ## On COMPLETED
 
 1. `aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --order DESC --max-results 10 --region us-east-1")` for the consolidated summary.
-2. `aws___call_aws(cli_command="aws devops-agent list-recommendations --agent-space-id SPACE_ID --task-id TASK_ID --region us-east-1")` for actionable fixes.
-3. `aws___call_aws(cli_command="aws devops-agent get-recommendation --agent-space-id SPACE_ID --recommendation-id REC_ID --region us-east-1")` for each — read the full spec.
-4. If the recommendation is an IaC change (CDK / CFN / Terraform), generate the fix locally **but do not apply it**. Show the diff, explain it, and let the user approve.
-5. If `list-recommendations` returns nothing **and this is the original investigation**, kick off a single follow-up:
+2. Trigger mitigation plan generation (2-5 min):
    ```
-   aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id SPACE_ID --task-type INVESTIGATION --title 'Generate mitigations for task TASK_ID' --priority LOW --description 'The prior investigation identified the root cause. Generate IaC remediation.' --region us-east-1")
+   aws___call_aws(cli_command="aws devops-agent update-backlog-task --agent-space-id SPACE_ID --task-id TASK_ID --task-status PENDING_START --region us-east-1")
    ```
-   If the follow-up also returns no recommendations, stop and tell the user no automated remediation is available.
+3. Poll `get-backlog-task` until `COMPLETED` again, then retrieve the mitigation plan:
+   ```
+   aws___call_aws(cli_command="aws devops-agent list-executions --agent-space-id SPACE_ID --task-id TASK_ID --region us-east-1")
+   ```
+   Find the newest execution_id, then:
+   ```
+   aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --record-type mitigation_summary_md --region us-east-1")
+   ```
+4. If the mitigation plan contains IaC changes (CDK / CFN / Terraform), generate the fix locally **but do not apply it**. Show the diff, explain it, and let the user approve.
+5. If still empty after mitigation completes, tell the user no automated remediation is available.
 
 ## Security
 

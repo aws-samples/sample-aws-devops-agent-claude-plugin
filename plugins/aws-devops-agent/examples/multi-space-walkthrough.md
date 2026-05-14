@@ -66,11 +66,18 @@ Update the user after each poll:
 Once the investigation completes:
 
 ```
-aws___call_aws(cli_command="aws devops-agent list-recommendations --agent-space-id as-prod-001 --task-id TASK_ID --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent update-backlog-task --agent-space-id as-prod-001 --task-id TASK_ID --task-status PENDING_START --region us-east-1")
+```
+
+Poll until `COMPLETED`, then retrieve the mitigation plan:
+
+```
+aws___call_aws(cli_command="aws devops-agent list-executions --agent-space-id as-prod-001 --task-id TASK_ID --region us-east-1")
+aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id as-prod-001 --execution-id EXEC_ID --record-type mitigation_summary_md --region us-east-1")
 ```
 
 Combine findings:
-- **Prod investigation**: Root cause + recommendations
+- **Prod investigation**: Root cause + mitigation plan
 - **Staging comparison**: "Staging is healthy — confirms this is a prod-only deploy issue"
 - **KB runbook**: Standard ECS 503 runbook for reference
 
