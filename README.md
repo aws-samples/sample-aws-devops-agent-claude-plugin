@@ -81,11 +81,12 @@ If you have more than one AgentSpace (e.g. prod, staging, knowledge), say "set u
 
 During incident response the plugin can generate 6+ permission prompts per task. To auto-approve **read-only** AWS calls and **chat streaming** while still gating mutations, use the PreToolUse hooks in `examples/hooks/`:
 
-1. Copy the hook scripts into your project:
+1. Copy the hook scripts from the plugin into your project:
 ```bash
 mkdir -p .claude/hooks
-cp examples/hooks/aws-allow-reads.sh .claude/hooks/
-cp examples/hooks/aws-allow-chat.sh  .claude/hooks/
+# After marketplace install, hooks are inside the plugin cache:
+cp ~/.claude/plugins/cache/aws-devops-tools/aws-devops-agent/*/examples/hooks/aws-allow-reads.sh .claude/hooks/
+cp ~/.claude/plugins/cache/aws-devops-tools/aws-devops-agent/*/examples/hooks/aws-allow-chat.sh  .claude/hooks/
 ```
 
 2. Add to `.claude/settings.json`:
@@ -94,17 +95,19 @@ cp examples/hooks/aws-allow-chat.sh  .claude/hooks/
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "mcp__aws-mcp__aws___call_aws",
+        "matcher": "mcp__plugin_aws-devops-agent_aws-mcp__aws___call_aws",
         "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-reads.sh"}]
       },
       {
-        "matcher": "mcp__aws-mcp__aws___run_script",
+        "matcher": "mcp__plugin_aws-devops-agent_aws-mcp__aws___run_script",
         "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-chat.sh"}]
       }
     ]
   }
 }
 ```
+
+> **Note:** The matcher prefix `mcp__plugin_aws-devops-agent_aws-mcp__` is derived from the plugin name (`aws-devops-agent`) and the MCP server key in `.mcp.json` (`aws-mcp`). If the plugin is renamed, these matchers must be updated.
 
 **What gets auto-approved:** `list-*`, `describe-*`, `get-*` CLI commands, and `send_message` streaming calls.
 **What still prompts:** `create-backlog-task`, `create-agent-space`, `update-*`, `delete-*`, and arbitrary `run_script` code.

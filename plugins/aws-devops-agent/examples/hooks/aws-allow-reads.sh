@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # PreToolUse hook: auto-approve read-only AWS DevOps Agent CLI calls.
-# Matches: mcp__aws-mcp__aws___call_aws
+# Matches: mcp__plugin_aws-devops-agent_aws-mcp__aws___call_aws
 #
 # Install in ~/.claude/settings.json:
 # {
 #   "hooks": {
 #     "PreToolUse": [
 #       {
-#         "matcher": "mcp__aws-mcp__aws___call_aws",
+#         "matcher": "mcp__plugin_aws-devops-agent_aws-mcp__aws___call_aws",
 #         "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/aws-allow-reads.sh"}]
 #       }
 #     ]

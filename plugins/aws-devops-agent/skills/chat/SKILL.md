@@ -26,21 +26,23 @@ Chat is the **default**. It's instant, conversational, and the agent retains ful
    ```
    Save `executionId` and reuse it for the entire conversation. The agent retains full context server-side.
 
-3. **Inject local context, then ask** using `aws___run_script` with the streaming pattern:
+3. **Inject local context, then ask** using `aws___run_script` with the `call_boto3` streaming pattern:
    ```python
    aws___run_script(code="""
-   import boto3
-   client = boto3.client('devops-agent', region_name='us-east-1')
-
-   response = client.send_message(
-       agentSpaceId='SPACE_ID',
-       executionId='EXEC_ID',
-       userId='USER_ID',
-       content='''[Local Context]
+   response = await call_boto3(
+       service_name='devops-agent',
+       operation_name='SendMessage',
+       region_name='us-east-1',
+       params={
+           'agentSpaceId': 'SPACE_ID',
+           'executionId': 'EXEC_ID',
+           'userId': 'USER_ID',
+           'content': '''[Local Context]
    <relevant IaC, dependency manifest, error log, git state>
 
    [Question]
    <what the user actually asked>'''
+       }
    )
 
    # Collect streamed response — skip 'final_response' duplicate blocks
@@ -63,7 +65,7 @@ Chat is the **default**. It's instant, conversational, and the agent retains ful
    ```
    The response comes back as collected text. Show it to the user.
 
-   > **Why `aws___run_script`?** `SendMessage` returns an EventStream that `aws___call_aws` cannot handle. The boto3 code above iterates the stream and deduplicates content (skipping `final_response` blocks).
+   > **Why `aws___run_script`?** `SendMessage` returns an EventStream that `aws___call_aws` cannot handle. The `call_boto3` helper iterates the stream inside the sandbox. Note: raw `import boto3` is blocked by the sandbox — always use `await call_boto3(...)` with a `params={}` dict.
 
 4. **Follow up.** Reuse the same `executionId` — the agent keeps context. Don't open a new chat per question.
 

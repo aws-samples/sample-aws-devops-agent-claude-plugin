@@ -18,7 +18,7 @@
 |--------|--------|
 | `CREATED` | Poll every 30s. Wait up to 60s — if still CREATED, keep waiting. |
 | `IN_PROGRESS` | Poll every 30–45s. Fetch journal records with pagination. |
-| `COMPLETED` | Stop polling. Fetch full journal `--order DESC --max-results 10`, then recommendations. |
+| `COMPLETED` | Stop polling. Fetch full journal `--order DESC --max-items 10`, then recommendations. |
 | `FAILED` | Stop polling. Fetch journal — partial findings often exist. |
 
 Never poll faster than 30s — you'll hit throttling.
@@ -66,16 +66,16 @@ aws___call_aws(cli_command="aws devops-agent list-journal-records ...") → stre
 
 Show the chat response immediately. Update the user with investigation progress as journal records come in.
 
-### Generate remediation only
+### Trigger mitigation on a completed investigation
 
 If a previous investigation completed without recommendations:
 
 ```
-aws___call_aws(cli_command="aws devops-agent create-backlog-task \
+aws___call_aws(cli_command="aws devops-agent update-backlog-task \
   --agent-space-id SPACE_ID \
-  --task-type INVESTIGATION \
-  --title 'Generate mitigations for task <prior-task-id>' \
-  --priority LOW \
-  --description 'The prior investigation identified <root cause>. Generate IaC remediation.' \
+  --task-id TASK_ID \
+  --task-status PENDING_START \
   --region us-east-1")
 ```
+
+This activates the Mitigation Agent on the existing investigation (2–5 min). Poll `get-backlog-task` until `COMPLETED`, then `list-recommendations`.

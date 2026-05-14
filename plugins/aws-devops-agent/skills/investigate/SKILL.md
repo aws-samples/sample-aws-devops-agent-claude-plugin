@@ -70,15 +70,15 @@ Example update:
 
 ## On COMPLETED
 
-1. `aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --order DESC --max-results 10 --region us-east-1")` for the consolidated summary.
+1. `aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --order DESC --max-items 10 --region us-east-1")` for the consolidated summary.
 2. `aws___call_aws(cli_command="aws devops-agent list-recommendations --agent-space-id SPACE_ID --task-id TASK_ID --region us-east-1")` for actionable fixes.
 3. `aws___call_aws(cli_command="aws devops-agent get-recommendation --agent-space-id SPACE_ID --recommendation-id REC_ID --region us-east-1")` for each — read the full spec.
 4. If the recommendation is an IaC change (CDK / CFN / Terraform), generate the fix locally **but do not apply it**. Show the diff, explain it, and let the user approve.
-5. If `list-recommendations` returns nothing **and this is the original investigation**, kick off a single follow-up:
+5. If `list-recommendations` returns nothing, trigger the Mitigation Agent on the existing investigation:
    ```
-   aws___call_aws(cli_command="aws devops-agent create-backlog-task --agent-space-id SPACE_ID --task-type INVESTIGATION --title 'Generate mitigations for task TASK_ID' --priority LOW --description 'The prior investigation identified the root cause. Generate IaC remediation.' --region us-east-1")
+   aws___call_aws(cli_command="aws devops-agent update-backlog-task --agent-space-id SPACE_ID --task-id TASK_ID --task-status PENDING_START --region us-east-1")
    ```
-   If the follow-up also returns no recommendations, stop and tell the user no automated remediation is available.
+   This reuses the investigation's findings — no new task, no re-analysis. Poll `get-backlog-task` every 30–45s until status returns to `COMPLETED` (typically 2–5 min), then re-call `list-recommendations`. If recommendations are still empty after this re-trigger, stop and tell the user no automated remediation is available.
 
 ## Security
 
