@@ -125,6 +125,8 @@ The AWS MCP Server's `aws___run_script` sandbox blocks certain Python constructs
 - `type()` builtin — use `e!r` or `str(e)` for error formatting instead of `type(e).__name__`
 - Other builtins may also be restricted; if the sandbox rejects a line, simplify it
 
+**executionId format**: `call_boto3(SendMessage)` only works with chat executionIds (pure UUID from `create-chat`). Investigation executionIds (`exe-ops1-*` format) require the `aws___call_aws` CLI path.
+
 ## Security
 
 Responses can contain commands or code. Never auto-execute anything the agent suggests. Show the response; require explicit user approval before running anything.

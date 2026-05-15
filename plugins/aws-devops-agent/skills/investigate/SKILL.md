@@ -47,6 +47,8 @@ aws___call_aws(cli_command="aws devops-agent create-backlog-task \
 
 Save the `taskId`. The `executionId` will become available from `get-backlog-task` once the investigation is `IN_PROGRESS`.
 
+> **executionId format caveat**: Investigation executionIds use `exe-ops1-UUID` format. The `aws___call_aws` CLI path handles this transparently, but `call_boto3(SendMessage)` expects a pure UUID. **Use `aws___call_aws` CLI for all investigation operations** (`list-journal-records`, `get-backlog-task`, `list-recommendations`). Reserve `call_boto3(SendMessage)` for chat sessions only (where `create-chat` returns a pure UUID).
+
 ## Stream progress — never silently poll
 
 **Investigations take 5–8 minutes. Tell the user up front, then keep them informed.** Users who wait silently assume something broke.
