@@ -47,6 +47,9 @@ Never poll faster than 30s — you'll hit throttling.
 | `LOW` | Postmortem, follow-up mitigation generation |
 | `MINIMAL` | Exploratory analysis, no time pressure |
 
+
+> **`aws___run_script → send_message(...)` shorthand:** The literal Python for `aws___run_script` is `await call_boto3(service_name='devops-agent', operation_name='SendMessage', params={...})`. See `chat/SKILL.md` for the full streaming pattern. Raw `import boto3` is blocked by the sandbox.
+
 ## Common patterns
 
 ### Parallel triage + investigation

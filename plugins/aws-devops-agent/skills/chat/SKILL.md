@@ -14,6 +14,8 @@ Chat is the **default**. It's instant, conversational, and the agent retains ful
 
 ## Workflow
 
+> **Note:** Replace `USER_ID` with the operator's identifier — typically `${USER}` (the Unix username) or `claude` if unavailable. The value must match `^[a-zA-Z0-9_.-]+$`. Do **not** pass the literal string "USER_ID".
+
 1. **Pick the AgentSpace.**
    ```
    aws___call_aws(cli_command="aws devops-agent list-agent-spaces --region us-east-1") → save agent_space_id
@@ -114,6 +116,14 @@ aws___call_aws(cli_command="aws devops-agent create-backlog-task \
 ```
 
 Switch to the `investigate` skill for the polling/streaming workflow.
+
+
+## Sandbox restrictions
+
+The AWS MCP Server's `aws___run_script` sandbox blocks certain Python constructs:
+- `import boto3` — use `await call_boto3(...)` instead
+- `type()` builtin — use `e!r` or `str(e)` for error formatting instead of `type(e).__name__`
+- Other builtins may also be restricted; if the sandbox rejects a line, simplify it
 
 ## Security
 

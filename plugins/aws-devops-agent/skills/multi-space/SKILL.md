@@ -42,6 +42,9 @@ If no guide exists, run discovery:
 2. For each space: `aws___call_aws(cli_command="aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1")` → `aws___run_script → send_message(executionId=..., userId=USER_ID, content="Summarize the AWS accounts, services, and runbooks you have access to.")`
 3. Offer to write the routing guide to `.claude/aws-devops-agent.md` so future sessions skip discovery.
 
+
+> **`aws___run_script → send_message(...)` shorthand:** The literal Python for `aws___run_script` is `await call_boto3(service_name='devops-agent', operation_name='SendMessage', params={...})`. See `chat/SKILL.md` for the full streaming pattern. Raw `import boto3` is blocked by the sandbox.
+
 ## Pattern A — Parallel queries, one synthesized answer
 
 Use when the user wants a comparison: "compare prod and staging error rates", "is this issue happening in both accounts?", "audit costs across all our environments".

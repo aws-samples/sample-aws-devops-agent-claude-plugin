@@ -8,6 +8,8 @@ Use this when the user is reporting or describing an operational problem that ne
 
 ## Pre-flight
 
+> **Note:** Replace `USER_ID` with the operator's identifier — typically `${USER}` (the Unix username) or `claude` if unavailable. The value must match `^[a-zA-Z0-9_.-]+$`. Do **not** pass the literal string "USER_ID".
+
 Before starting an investigation, gather **local context** and pack it into the `--description` parameter. This is the killer feature — the DevOps Agent knows your AWS cloud; you know the user's local workspace.
 
 Always collect:
@@ -70,7 +72,7 @@ Example update:
 
 ## On COMPLETED
 
-1. `aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --order DESC --max-items 10 --region us-east-1")` for the consolidated summary.
+1. `aws___call_aws(cli_command="aws devops-agent list-journal-records --agent-space-id SPACE_ID --execution-id EXEC_ID --order DESC --max-items 10 --region us-east-1")` for the consolidated summary AND the full analysis. Look for the latest `recordType:"message"` record — for some AgentSpaces the agent's full root-cause analysis lives here rather than in structured `Recommendation` objects. Present that record's content to the user.
 2. `aws___call_aws(cli_command="aws devops-agent list-recommendations --agent-space-id SPACE_ID --task-id TASK_ID --region us-east-1")` for actionable fixes.
 3. `aws___call_aws(cli_command="aws devops-agent get-recommendation --agent-space-id SPACE_ID --recommendation-id REC_ID --region us-east-1")` for each — read the full spec.
 4. If the recommendation is an IaC change (CDK / CFN / Terraform), generate the fix locally **but do not apply it**. Show the diff, explain it, and let the user approve.
@@ -78,7 +80,7 @@ Example update:
    ```
    aws___call_aws(cli_command="aws devops-agent update-backlog-task --agent-space-id SPACE_ID --task-id TASK_ID --task-status PENDING_START --region us-east-1")
    ```
-   This reuses the investigation's findings — no new task, no re-analysis. Poll `get-backlog-task` every 30–45s until status returns to `COMPLETED` (typically 2–5 min), then re-call `list-recommendations`. If recommendations are still empty after this re-trigger, stop and tell the user no automated remediation is available.
+   This reuses the investigation's findings — no new task, no re-analysis. Poll `get-backlog-task` every 30–45s until status returns to `COMPLETED` (typically 2–5 min), then re-call `list-recommendations`. If recommendations are still empty after this re-trigger AND the journal does not contain a `recordType:"message"` analysis (step 1), stop and tell the user no automated remediation is available. Otherwise — if the journal has the analysis — present that as the remediation.
 
 ## Security
 

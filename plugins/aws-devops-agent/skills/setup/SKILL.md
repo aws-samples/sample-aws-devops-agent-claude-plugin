@@ -76,7 +76,9 @@ Record the space name and ID for each. If a profile has no space:
 
 ## Step 5 — Configure the MCP server
 
-Add the AWS MCP Server to Claude Code's MCP configuration (typically `~/.claude/settings/mcp.json` or the project-level `.mcp.json`):
+If you installed via `/plugin install aws-devops-agent@aws-devops-tools`, the AWS MCP Server is configured automatically — the plugin ships its own `.mcp.json`. **Skip to Step 6.**
+
+**Configure manually only if you are NOT using the plugin** (e.g. consuming the AWS MCP Server directly):
 
 ```json
 {
