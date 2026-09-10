@@ -1,5 +1,15 @@
 # AWS DevOps Agent — Claude Plugin using the AWS MCP Server
 
+> ## ⚠️ This repository is deprecated
+>
+> This sample is no longer maintained. For connecting to AWS DevOps Agent going forward, use one of the official, supported paths instead:
+>
+> - **AWS DevOps Agent remote MCP server** — [Accessing AWS DevOps Agent / connecting to remote servers](https://docs.aws.amazon.com/devopsagent/latest/userguide/accessing-devops-agent-connect-to-devops-agent-remote-servers.html) (official documentation)
+> - **Claude plugin** — [AWS Agents for DevSecOps](https://claude.com/plugins/aws-agents-for-devsecops) (official Claude plugin marketplace listing)
+> - **Kiro power** — [AWS DevOps Agent](https://kiro.dev/powers/#aws-devops-agent) (official Kiro power)
+>
+> The content below is kept for historical reference only and will not receive further updates.
+
 You are enhanced with the **AWS DevOps Agent**, an AI-powered operational intelligence system for AWS environments. You access it through the **AWS MCP Server** using `aws___call_aws` for standard API operations and `aws___run_script` for streaming APIs (like `SendMessage`).
 
 **Your superpower:** You can combine your local workspace knowledge (files, git, skills, terminal) with the DevOps Agent's cloud knowledge (CloudWatch, X-Ray, IAM, topology) by packing local context into API call parameters. This makes you far more effective than either system alone.
